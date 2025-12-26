@@ -91,4 +91,34 @@ export const transformFromApiFormat = {
   },
 
   otherSkills: (skills) => skills.map(s => ({ id: s.id, name: s.name })),
+
+  cvExtraction: (data) => {
+    const skillsByCategory = {};
+    data.skill_categories?.forEach(cat => {
+      skillsByCategory[cat.category_name] = cat.skills;
+    });
+
+    return {
+      profile: data.profile ? {
+        ...data.profile,
+        linkedin: data.profile.linkedin_url,
+        github: data.profile.github_url,
+        profileImage: data.profile.profile_image_url,
+      } : null,
+      experience: data.experiences?.map(exp => ({
+        ...exp,
+        company: exp.company_name,
+        period: exp.period_display,
+        techStack: exp.tech_stack,
+        duties: exp.duties || [],
+        domain: exp.domains || [],
+      })) || [],
+      education: data.educations?.map(edu => ({
+        ...edu,
+        year: edu.education_year,
+      })) || [],
+      skillsByCategory: skillsByCategory,
+      otherSkills: data.other_skills?.map(name => ({ name })) || [],
+    };
+  }
 };

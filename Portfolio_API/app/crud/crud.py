@@ -261,3 +261,68 @@ def delete_education(db: Session, education_id: UUID) -> bool:
         db.commit()
         return True
     return False
+
+def bulk_replace_cv_data(db: Session, extraction: dict):
+    """Replace all active CV data with new extraction data"""
+    
+    # 1. Update/Create Profile
+    if extraction.get('profile'):
+        existing_profile = db.query(Profile).filter(Profile.state_code == 0).first()
+        if existing_profile:
+            # Update
+            for key, value in extraction['profile'].items():
+                if value is not None:
+                    setattr(existing_profile, key, value)
+        else:
+            db_profile = Profile(**extraction['profile'])
+            db.add(db_profile)
+
+    # 2. Replace Experiences (Soft delete existing)
+    if 'experiences' in extraction and extraction['experiences']:
+        db.query(Experience).filter(Experience.state_code == 0).update(
+            {Experience.state_code: 1, Experience.status_code: 2}, 
+            synchronize_session=False
+        )
+        for exp_data in extraction['experiences']:
+            create_experience(db, exp_data)
+
+    # 3. Replace Educations
+    if 'educations' in extraction and extraction['educations']:
+        db.query(Education).filter(Education.state_code == 0).update(
+            {Education.state_code: 1, Education.status_code: 2}, 
+            synchronize_session=False
+        )
+        for edu_data in extraction['educations']:
+            create_education(db, edu_data)
+
+    # 4. Replace Skill Categories and Skills
+    if 'skill_categories' in extraction and extraction['skill_categories']:
+        # Deactivate all skills and categories
+        db.query(Skill).filter(Skill.state_code == 0).update(
+            {Skill.state_code: 1, Skill.status_code: 2}, 
+            synchronize_session=False
+        )
+        db.query(SkillCategory).filter(SkillCategory.state_code == 0).update(
+            {SkillCategory.state_code: 1, SkillCategory.status_code: 2}, 
+            synchronize_session=False
+        )
+        for i, cat_data in enumerate(extraction['skill_categories']):
+            db_category = SkillCategory(name=cat_data['category_name'], display_order=i)
+            db.add(db_category)
+            db.flush() # Get ID
+            for skill_name in cat_data['skills']:
+                db_skill = Skill(name=skill_name, category_id=db_category.id)
+                db.add(db_skill)
+
+    # 5. Replace Other Skills
+    if 'other_skills' in extraction and extraction['other_skills']:
+        db.query(OtherSkill).filter(OtherSkill.state_code == 0).update(
+            {OtherSkill.state_code: 1, OtherSkill.status_code: 2}, 
+            synchronize_session=False
+        )
+        for os_name in extraction['other_skills']:
+            db_other_skill = OtherSkill(name=os_name)
+            db.add(db_other_skill)
+    
+    db.commit()
+    return True

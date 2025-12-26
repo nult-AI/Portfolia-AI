@@ -10,12 +10,30 @@ class ApiClient {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
+    
+    // Default headers
+    const headers = { ...options.headers };
+    
+    let body = options.body;
+
+    // Handle data transformation based on type
+    if (options.data !== undefined) {
+      if (options.data instanceof FormData) {
+        body = options.data;
+        // Don't set Content-Type for FormData, let the browser handle it with boundary
+        delete headers['Content-Type'];
+      } else {
+        body = JSON.stringify(options.data);
+        if (!headers['Content-Type']) {
+          headers['Content-Type'] = 'application/json';
+        }
+      }
+    }
+
     const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
       ...options,
+      headers,
+      body,
     };
 
     try {
@@ -46,7 +64,7 @@ class ApiClient {
     return this.request(endpoint, {
       ...options,
       method: 'POST',
-      body: JSON.stringify(data),
+      data,
     });
   }
 
@@ -54,7 +72,7 @@ class ApiClient {
     return this.request(endpoint, {
       ...options,
       method: 'PUT',
-      body: JSON.stringify(data),
+      data,
     });
   }
 

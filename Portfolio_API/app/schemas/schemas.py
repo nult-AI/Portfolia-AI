@@ -171,6 +171,20 @@ class Profile(ProfileBase):
     modified_on: datetime
 
 # =====================================================
+# CV Extraction Schemas
+# =====================================================
+class SkillCategoryExtraction(BaseSchema):
+    category_name: str
+    skills: List[str]
+
+class CVExtractionResponse(BaseSchema):
+    profile: Optional[ProfileCreate] = None
+    experiences: List[ExperienceCreate] = []
+    educations: List[EducationCreate] = []
+    skill_categories: List[SkillCategoryExtraction] = []
+    other_skills: List[str] = []
+
+# =====================================================
 # Response Schemas
 # =====================================================
 class MessageResponse(BaseSchema):

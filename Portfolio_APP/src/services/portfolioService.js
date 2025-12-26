@@ -65,3 +65,15 @@ export const educationService = {
   update: (id, data) => apiClient.put(`/education/${id}`, data),
   delete: (id) => apiClient.delete(`/education/${id}`),
 };
+
+/**
+ * CV Extraction API Service
+ */
+export const cvService = {
+  process: (file, mode = 'preview') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('mode', mode);
+    return apiClient.post('/cv/process', formData);
+  },
+};

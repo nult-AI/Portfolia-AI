@@ -12,6 +12,7 @@ import {
   otherSkillService,
   skillCategoryService,
   skillService,
+  cvService,
 } from './services/portfolioService';
 import { transformToApiFormat, transformFromApiFormat } from './utils/dataTransform';
 
@@ -267,20 +268,13 @@ const SkillsForm = ({ category, skills, onSave, onCancel }) => (
   </form>
 );
 
-const PDFUploadModal = ({ isOpen, onClose, onAction }) => {
+const PDFUploadModal = ({ isOpen, onClose, onAction, isProcessing }) => {
   const [file, setFile] = useState(null);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile && selectedFile.type === 'application/pdf') {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setFile({
-          name: selectedFile.name,
-          base64: e.target.result
-        });
-      };
-      reader.readAsDataURL(selectedFile);
+      setFile(selectedFile);
     } else {
       alert('Vui lòng chọn file PDF hợp lệ!');
     }
@@ -289,63 +283,73 @@ const PDFUploadModal = ({ isOpen, onClose, onAction }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Cập nhật thông tin từ CV (PDF)">
       <div className="space-y-6">
-        <div className="p-8 border-2 border-dashed border-white/10 rounded-2xl bg-white/5 text-center group hover:border-primary/40 transition-all">
-          {!file ? (
-            <label className="cursor-pointer block space-y-4">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
-                <Upload className="text-primary" size={32} />
-              </div>
-              <div>
-                <p className="text-white font-bold text-lg">Chọn file PDF của bạn</p>
-                <p className="text-text-muted text-sm mt-1">Kéo thả hoặc nhấn để duyệt file</p>
-              </div>
-              <input type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
-            </label>
-          ) : (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
-              <div className="flex items-center gap-4 bg-primary/10 p-4 rounded-xl border border-primary/20">
-                <FileText className="text-primary" size={32} />
-                <div className="text-left">
-                  <p className="text-white font-bold truncate max-w-[200px]">{file.name}</p>
-                  <p className="text-primary text-xs uppercase tracking-widest font-bold">File đã sẵn sàng</p>
-                </div>
-                <button onClick={() => setFile(null)} className="ml-auto p-2 hover:bg-white/10 rounded-full transition-colors whitespace-nowrap">
-                  <RefreshCw size={18} /> Đổi file
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </div>
+        {isProcessing ? (
+          <div className="p-12 text-center space-y-4">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto"></div>
+            <p className="text-white font-bold text-lg animate-pulse">Đang dùng AI phân tích CV của bạn...</p>
+            <p className="text-text-muted text-sm italic">Quá trình này có thể mất vài giây tùy vào độ dài CV.</p>
+          </div>
+        ) : (
+          <>
+            <div className="p-8 border-2 border-dashed border-white/10 bg-white/5 text-center group hover:border-primary/40 transition-all">
+              {!file ? (
+                <label className="cursor-pointer block space-y-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                    <Upload className="text-primary" size={32} />
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-lg">Chọn file PDF của bạn</p>
+                    <p className="text-text-muted text-sm mt-1">Kéo thả hoặc nhấn để duyệt file</p>
+                  </div>
+                  <input type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
+                </label>
+              ) : (
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
+                  <div className="flex items-center gap-4 bg-primary/10 p-4 border border-primary/20">
+                    <FileText className="text-primary" size={32} />
+                    <div className="text-left">
+                      <p className="text-white font-bold truncate max-w-[200px]">{file.name}</p>
+                      <p className="text-primary text-xs uppercase tracking-widest font-bold">File đã sẵn sàng</p>
+                    </div>
+                    <button onClick={() => setFile(null)} className="ml-auto p-2 hover:bg-white/10 transition-colors whitespace-nowrap">
+                      <RefreshCw size={18} /> Đổi file
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </div>
 
-        {file && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-4 pt-4">
-            <button
-              onClick={() => onAction('preview', file)}
-              className="group flex flex-col items-center gap-3 p-6 glass hover:bg-primary/20 transition-all border border-white/10 hover:border-primary/30"
-            >
-              <div className="p-3 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors">
-                <Eye className="text-primary" size={24} />
-              </div>
-              <div className="text-center">
-                <p className="font-bold text-white uppercase text-xs tracking-widest mb-1">Mode: Preview</p>
-                <p className="font-bold text-white text-lg">Xem trước</p>
-                <p className="text-xs text-text-muted mt-1 leading-relaxed">Phân tích dữ liệu & hiển thị,<br />không lưu vào Database.</p>
-              </div>
-            </button>
-            <button
-              onClick={() => onAction('replace', file)}
-              className="group flex flex-col items-center gap-3 p-6 glass hover:bg-accent/20 transition-all border border-white/10 hover:border-accent/30"
-            >
-              <div className="p-3 bg-accent/10 rounded-xl group-hover:bg-accent/20 transition-colors">
-                <RefreshCw className="text-accent" size={24} />
-              </div>
-              <div className="text-center">
-                <p className="font-bold text-white uppercase text-xs tracking-widest mb-1">Mode: Replace</p>
-                <p className="font-bold text-white text-lg">Ghi đè</p>
-                <p className="text-xs text-text-muted mt-1 leading-relaxed">Phân tích & tự động cập nhật<br />trực tiếp vào Database.</p>
-              </div>
-            </button>
-          </motion.div>
+            {file && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-4 pt-4">
+                <button
+                  onClick={() => onAction('preview', file)}
+                  className="group flex flex-col items-center gap-3 p-6 glass hover:bg-primary/20 transition-all border border-white/10 hover:border-primary/30"
+                >
+                  <div className="p-3 bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <Eye className="text-primary" size={24} />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-white uppercase text-xs tracking-widest mb-1">Mode: Preview</p>
+                    <p className="font-bold text-white text-lg">Xem trước</p>
+                    <p className="text-xs text-text-muted mt-1 leading-relaxed">Phân tích dữ liệu & hiển thị,<br />không lưu vào Database.</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => onAction('replace', file)}
+                  className="group flex flex-col items-center gap-3 p-6 glass hover:bg-accent/20 transition-all border border-white/10 hover:border-accent/30"
+                >
+                  <div className="p-3 bg-accent/10 group-hover:bg-accent/20 transition-colors">
+                    <RefreshCw className="text-accent" size={24} />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-white uppercase text-xs tracking-widest mb-1">Mode: Replace</p>
+                    <p className="font-bold text-white text-lg">Ghi đè</p>
+                    <p className="text-xs text-text-muted mt-1 leading-relaxed">Phân tích & tự động cập nhật<br />trực tiếp vào Database.</p>
+                  </div>
+                </button>
+              </motion.div>
+            )}
+          </>
         )}
       </div>
     </Modal>
@@ -354,7 +358,7 @@ const PDFUploadModal = ({ isOpen, onClose, onAction }) => {
 
 // --- End Form Components ---
 
-const Navbar = ({ isAdmin, onToggleAdmin, onPDFAction }) => {
+const Navbar = ({ isAdmin, onToggleAdmin, onPDFAction, isProcessing }) => {
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 
   return (
@@ -365,7 +369,7 @@ const Navbar = ({ isAdmin, onToggleAdmin, onPDFAction }) => {
           {isAdmin && (
             <button
               onClick={() => setIsPDFModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-sm font-medium"
             >
               <Upload size={16} className="text-primary" /> Cập nhật CV (PDF)
             </button>
@@ -386,9 +390,14 @@ const Navbar = ({ isAdmin, onToggleAdmin, onPDFAction }) => {
       <PDFUploadModal
         isOpen={isPDFModalOpen}
         onClose={() => setIsPDFModalOpen(false)}
+        isProcessing={isProcessing}
         onAction={(action, file) => {
           onPDFAction(action, file);
-          setIsPDFModalOpen(false);
+          // Don't close immediately if replace, let the handler manage it?
+          // For now, we'll keep it as is, or maybe only close on success.
+          if (action === 'replace') {
+            // setIsPDFModalOpen(false); // will close when refetch happens?
+          }
         }}
       />
     </>
@@ -408,6 +417,8 @@ function App() {
   const { mutate } = useMutation();
   const [editing, setEditing] = useState({ section: null, id: null });
   const [localData, setLocalData] = useState(null);
+  const [isProcessingCV, setIsProcessingCV] = useState(false);
+  const [extractedCVData, setExtractedCVData] = useState(null);
 
   // Use local data if available (for optimistic updates), otherwise API data or fallback
   const data = localData || apiData || INITIAL_DATA;
@@ -607,24 +618,27 @@ function App() {
     }
   };
 
-  const handlePDFAction = (action, fileData) => {
-    console.log(`PDF Action: ${action}`, fileData.name);
-    const payload = {
-      fileName: fileData.name,
-      base64: fileData.base64,
-      action: action,
-      timestamp: new Date().toISOString()
-    };
+  const handlePDFAction = async (action, fileData) => {
+    setIsProcessingCV(true);
+    try {
+      // action can be 'preview' or 'replace'
+      const response = await mutate(cvService.process, fileData, action);
+      const analyzedData = response.data;
+      setExtractedCVData(analyzedData);
 
-    if (action === 'preview') {
-      alert(`Đang giả lập xem trước file: ${fileData.name}\n(Dữ liệu đã được chuẩn hóa để gửi API)`);
-      console.log('API Payload Preview:', payload);
-    } else {
-      alert(`Đang gửi file ${fileData.name} lên API để cập nhật hệ thống...`);
-      console.log('API Payload Replace:', payload);
-      setTimeout(() => {
-        alert('API đã xử lý thành công! (Simulated)');
-      }, 1500);
+      if (action === 'preview') {
+        const transformed = transformFromApiFormat.cvExtraction(analyzedData);
+        setLocalData(transformed);
+        alert('Đã phân tích CV thành công! Bạn đang ở chế độ xem trước dữ liệu vừa trích xuất.');
+      } else {
+        // action === 'replace'
+        alert('Hệ thống đã được cập nhật thành công từ CV của bạn!');
+        refetch(); // Reload everything from backend
+      }
+    } catch (err) {
+      alert(`Lỗi khi xử lý CV: ${err.message}`);
+    } finally {
+      setIsProcessingCV(false);
     }
   };
 
@@ -665,6 +679,7 @@ function App() {
           isAdmin={isAdmin}
           onToggleAdmin={() => setIsAdmin(!isAdmin)}
           onPDFAction={handlePDFAction}
+          isProcessing={isProcessingCV}
         />
 
         <Routes>
