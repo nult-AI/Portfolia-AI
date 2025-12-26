@@ -36,3 +36,8 @@
 │ Secret Key │ 850181e4652dd023b7a98c58ae0d2d34bd487ee0cc3254aed6eda37307425907 │
 │ Region     │ local                                                            │
 ╰────────────┴──────────────────────────────────────────────────────────────────╯
+
+postgresql://postgres:[YOUR_PASSWORD]@127.0.0.1:5432/postgres
+jdbc:postgresql://127.0.0.1:5432/postgres?user=postgres&password=postgres
+Password: VkavaTgJO3jB4oCO
+

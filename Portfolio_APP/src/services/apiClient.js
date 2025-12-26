@@ -1,0 +1,66 @@
+import API_BASE_URL from '../config/api';
+
+/**
+ * Base API client with error handling
+ */
+class ApiClient {
+  constructor(baseURL = API_BASE_URL) {
+    this.baseURL = baseURL;
+  }
+
+  async request(endpoint, options = {}) {
+    const url = `${this.baseURL}${endpoint}`;
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'An error occurred' }));
+        throw new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Handle 204 No Content
+      if (response.status === 204) {
+        return null;
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('API Request Error:', error);
+      throw error;
+    }
+  }
+
+  get(endpoint, options = {}) {
+    return this.request(endpoint, { ...options, method: 'GET' });
+  }
+
+  post(endpoint, data, options = {}) {
+    return this.request(endpoint, {
+      ...options,
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  put(endpoint, data, options = {}) {
+    return this.request(endpoint, {
+      ...options,
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  delete(endpoint, options = {}) {
+    return this.request(endpoint, { ...options, method: 'DELETE' });
+  }
+}
+
+export default new ApiClient();

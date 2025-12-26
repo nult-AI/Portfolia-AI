@@ -3,17 +3,33 @@ import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-ro
 import { User, Edit, LogIn, LogOut, Upload, Mail, MapPin, Briefcase, GraduationCap, Github, Linkedin, ExternalLink, Phone, Globe, Plus, X, Save, FileText, Eye, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import profileImg from './assets/profile.png';
+import { usePortfolio } from './context/PortfolioContext';
+import { useMutation } from './hooks/useApi';
+import {
+  profileService,
+  experienceService,
+  educationService,
+  otherSkillService,
+  skillCategoryService,
+  skillService,
+} from './services/portfolioService';
+import { transformToApiFormat, transformFromApiFormat } from './utils/dataTransform';
 
-// Mock Data
+
+
+
+// Mock Data - Fallback structure matching API format
 const INITIAL_DATA = {
-  name: "MINH NHAT, LE",
-  role: "Senior Full Stack .NET, React | Lead / Senior Software Engineer",
-  bio: "Chuyên gia phát triển hệ thống .NET Full Stack với hơn 14 năm kinh nghiệm. Có khả năng dẫn dắt đội ngũ lớn (hơn 11 người), thiết kế kiến trúc hệ thống từ Monolith đến Microservices, và triển khai trên các nền tảng Cloud hiện đại như AWS, Azure.",
-  email: "nult2003@gmail.com",
-  phone: "0982 880 258",
-  location: "33/47 Street 4, Binh Hung Hoa Ward, Ho Chi Minh City, Viet Nam",
-  skype: "nult2003@gmail.com",
-  linkedin: "https://www.linkedin.com/in/minh-nhat-le-a9638919/",
+  profile: {
+    name: "MINH NHAT, LE",
+    role: "Senior Full Stack .NET, React | Lead / Senior Software Engineer",
+    bio: "Chuyên gia phát triển hệ thống .NET Full Stack với hơn 14 năm kinh nghiệm. Có khả năng dẫn dắt đội ngũ lớn (hơn 11 người), thiết kế kiến trúc hệ thống từ Monolith đến Microservices, và triển khai trên các nền tảng Cloud hiện đại như AWS, Azure.",
+    email: "nult2003@gmail.com",
+    phone: "0982 880 258",
+    location: "33/47 Street 4, Binh Hung Hoa Ward, Ho Chi Minh City, Viet Nam",
+    skype: "nult2003@gmail.com",
+    linkedin: "https://www.linkedin.com/in/minh-nhat-le-a9638919/",
+  },
   skillsByCategory: {
     "Programming Languages": ["C#", "HTML", "CSS", "SASS", "JavaScript", "TypeScript", "SQL"],
     "Frameworks": ["MVC", "Entity Framework", "KnockoutJS", "VueJS", "React", ".NET Core Web API", "WCF", "WPF", "NUnit"],
@@ -62,11 +78,12 @@ const INITIAL_DATA = {
     {
       id: 1,
       school: "Post and Telecommunication Institute of Technology",
-      degree: "Engineer’s Degree",
+      degree: "Engineer's Degree",
       major: "Software Engineer"
     }
   ]
 };
+
 
 // Components
 const Modal = ({ isOpen, onClose, title, children }) => (
@@ -129,12 +146,14 @@ const ExperienceForm = ({ item, onSave, onCancel }) => (
   <form className="space-y-4" onSubmit={(e) => {
     e.preventDefault();
     const duties = e.target.duties.value.split('\n').filter(d => d.trim() !== '');
+    const domains = e.target.domains.value.split('\n').filter(d => d.trim() !== '');
     onSave({
       company: e.target.company.value,
       period: e.target.period.value,
       role: e.target.role.value,
       techStack: e.target.techStack.value,
-      duties: duties
+      duties: duties,
+      domain: domains
     });
   }}>
     <div className="grid grid-cols-2 gap-4">
@@ -154,6 +173,10 @@ const ExperienceForm = ({ item, onSave, onCancel }) => (
     <div className="space-y-2">
       <label className="text-sm font-medium text-text-muted">Công nghệ</label>
       <input name="techStack" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white" defaultValue={item?.techStack} />
+    </div>
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-text-muted">Dự án / Lĩnh vực (mỗi dòng một ý)</label>
+      <textarea name="domains" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white min-h-[60px]" defaultValue={item?.domain?.join('\n')} />
     </div>
     <div className="space-y-2">
       <label className="text-sm font-medium text-text-muted">Nhiệm vụ (mỗi dòng một ý)</label>
@@ -378,66 +401,214 @@ const Footer = () => (
   </footer>
 );
 
+
 function App() {
   const [isAdmin, setIsAdmin] = useState(false);
-  // Khởi tạo data từ localStorage nếu có, nếu không lấy INITIAL_DATA
-  const [data, setData] = useState(() => {
-    const saved = localStorage.getItem('portfolio_data');
-    return saved ? JSON.parse(saved) : INITIAL_DATA;
-  });
+  const { data: apiData, loading, error, refetch } = usePortfolio();
+  const { mutate } = useMutation();
   const [editing, setEditing] = useState({ section: null, id: null });
+  const [localData, setLocalData] = useState(null);
 
-  // Lưu vào localStorage mỗi khi data thay đổi
+  // Use local data if available (for optimistic updates), otherwise API data or fallback
+  const data = localData || apiData || INITIAL_DATA;
+
+  // Update local data when API data changes
   React.useEffect(() => {
-    localStorage.setItem('portfolio_data', JSON.stringify(data));
-  }, [data]);
-
-  const handleSave = (section, formData) => {
-    let newData = { ...data };
-
-    if (section === 'bio') {
-      newData.bio = formData.bio;
-    } else if (section === 'exp') {
-      if (editing.id === 'new') {
-        const nextId = Math.max(...data.experience.map(e => e.id), 0) + 1;
-        newData.experience = [{ id: nextId, ...formData }, ...data.experience];
-      } else {
-        newData.experience = data.experience.map(e => e.id === editing.id ? { ...e, ...formData } : e);
-      }
-    } else if (section === 'edu') {
-      if (editing.id === 'new') {
-        const nextId = Math.max(...data.education.map(e => e.id), 0) + 1;
-        newData.education = [{ id: nextId, ...formData }, ...data.education];
-      } else {
-        newData.education = data.education.map(e => e.id === editing.id ? { ...e, ...formData } : e);
-      }
-    } else if (section === 'skills') {
-      if (editing.id === 'new') {
-        newData.skillsByCategory = { ...data.skillsByCategory, [formData.category]: formData.skills };
-      } else {
-        // Cập nhật nhóm kỹ năng cũ
-        const updatedSkills = { ...data.skillsByCategory };
-        if (formData.category !== editing.id) {
-          delete updatedSkills[editing.id];
-        }
-        updatedSkills[formData.category] = formData.skills;
-        newData.skillsByCategory = updatedSkills;
-      }
-    } else if (section === 'otherSkills') {
-      if (editing.id === 'new') {
-        newData.otherSkills = [...data.otherSkills, formData.skill];
-      } else {
-        newData.otherSkills = data.otherSkills.map((s, i) => i === editing.id ? formData.skill : s);
-      }
+    if (apiData) {
+      setLocalData(apiData);
     }
+  }, [apiData]);
 
-    setData(newData);
-    setEditing({ section: null, id: null });
+  const handleSave = async (section, formData) => {
+    try {
+      if (section === 'profile') {
+        // Update entire profile
+        if (data.profile?.id) {
+          const profileData = transformToApiFormat.profile(formData);
+          const updated = await mutate(profileService.updateProfile, data.profile.id, profileData);
+
+          // Optimistic UI update
+          setLocalData(prev => ({
+            ...prev,
+            profile: { ...prev.profile, ...formData }
+          }));
+        }
+      } else if (section === 'bio') {
+        // Update profile bio only
+        if (data.profile?.id) {
+          await mutate(profileService.updateProfile, data.profile.id, { bio: formData.bio });
+
+          // Optimistic UI update
+          setLocalData(prev => ({
+            ...prev,
+            profile: { ...prev.profile, bio: formData.bio }
+          }));
+        }
+      } else if (section === 'exp') {
+        if (editing.id === 'new') {
+          const expData = transformToApiFormat.experience(formData);
+          const newExp = await mutate(experienceService.create, expData);
+
+          // Optimistic UI update
+          setLocalData(prev => ({
+            ...prev,
+            experience: [transformFromApiFormat.experience(newExp), ...prev.experience]
+          }));
+        } else {
+          const expData = transformToApiFormat.experience(formData);
+          const updated = await mutate(experienceService.update, editing.id, expData);
+
+          // Optimistic UI update
+          setLocalData(prev => ({
+            ...prev,
+            experience: prev.experience.map(e =>
+              e.id === editing.id ? transformFromApiFormat.experience(updated) : e
+            )
+          }));
+        }
+      } else if (section === 'edu') {
+        if (editing.id === 'new') {
+          const eduData = transformToApiFormat.education(formData);
+          const newEdu = await mutate(educationService.create, eduData);
+
+          // Optimistic UI update
+          setLocalData(prev => ({
+            ...prev,
+            education: [transformFromApiFormat.education(newEdu), ...prev.education]
+          }));
+        } else {
+          const eduData = transformToApiFormat.education(formData);
+          const updated = await mutate(educationService.update, editing.id, eduData);
+
+          // Optimistic UI update
+          setLocalData(prev => ({
+            ...prev,
+            education: prev.education.map(e =>
+              e.id === editing.id ? transformFromApiFormat.education(updated) : e
+            )
+          }));
+        }
+      } else if (section === 'otherSkills') {
+        if (editing.id === 'new') {
+          const newSkill = await mutate(otherSkillService.create, { name: formData.skill });
+
+          // Optimistic UI update
+          setLocalData(prev => ({
+            ...prev,
+            otherSkills: [...prev.otherSkills, { id: newSkill.id, name: formData.skill }]
+          }));
+        } else {
+          // Update existing
+          await mutate(otherSkillService.update, editing.id, { name: formData.skill });
+
+          // Optimistic UI update
+          setLocalData(prev => ({
+            ...prev,
+            otherSkills: prev.otherSkills.map(s =>
+              s.id === editing.id ? { ...s, name: formData.skill } : s
+            )
+          }));
+        }
+      } else if (section === 'skills') {
+        // Update existing skill category
+        if (editing.id === 'new') {
+          // This shouldn't happen, but handle it as create
+          const newCategory = await mutate(skillCategoryService.create, {
+            name: formData.category,
+            display_order: Object.keys(data.skillsByCategory).length
+          });
+
+          // Add skills to the new category
+          for (const skillName of formData.skills) {
+            await mutate(skillService.create, {
+              name: skillName,
+              category_id: newCategory.id
+            });
+          }
+
+          // Optimistic UI update
+          setLocalData(prev => ({
+            ...prev,
+            skillsByCategory: {
+              ...prev.skillsByCategory,
+              [formData.category]: formData.skills
+            }
+          }));
+        } else {
+          // Update existing category - editing.id is the category name
+          // Find the category ID from the backend
+          let categoryId = null;
+          try {
+            const categories = await mutate(skillCategoryService.getAll);
+            const cat = categories.find(c => c.name === editing.id);
+            if (cat) {
+              categoryId = cat.id;
+            }
+          } catch (e) {
+            console.error('Failed to fetch categories', e);
+          }
+
+          // Determine which skills are new and need to be created
+          const existingSkills = data.skillsByCategory[editing.id] || [];
+          const newSkills = formData.skills.filter(s => !existingSkills.includes(s));
+          if (categoryId) {
+            for (const skillName of newSkills) {
+              try {
+                await mutate(skillService.create, { name: skillName, category_id: categoryId });
+              } catch (e) {
+                console.error('Failed to create skill', skillName, e);
+              }
+            }
+          }
+
+          // Optimistic UI update
+          setLocalData(prev => {
+            const newSkillsByCategory = { ...prev.skillsByCategory };
+            const categoryName = editing.id; // old name
+            if (categoryName !== formData.category) {
+              delete newSkillsByCategory[categoryName];
+            }
+            newSkillsByCategory[formData.category] = formData.skills;
+            return { ...prev, skillsByCategory: newSkillsByCategory };
+          });
+
+          // Note: Full backend sync would also handle renaming category and deleting removed skills.
+        }
+      } else if (section === 'skills-add') {
+        // Create new skill category
+        const newCategory = await mutate(skillCategoryService.create, {
+          name: formData.category,
+          display_order: Object.keys(data.skillsByCategory).length
+        });
+
+        // Add skills to the new category
+        for (const skillName of formData.skills) {
+          await mutate(skillService.create, {
+            name: skillName,
+            category_id: newCategory.id
+          });
+        }
+
+        // Optimistic UI update
+        setLocalData(prev => ({
+          ...prev,
+          skillsByCategory: {
+            ...prev.skillsByCategory,
+            [formData.category]: formData.skills
+          }
+        }));
+      }
+
+      setEditing({ section: null, id: null });
+    } catch (err) {
+      alert(`Error saving: ${err.message}`);
+      // Revert to API data on error
+      setLocalData(apiData);
+    }
   };
 
   const handlePDFAction = (action, fileData) => {
     console.log(`PDF Action: ${action}`, fileData.name);
-    // Chuẩn bị payload để gửi API sau này
     const payload = {
       fileName: fileData.name,
       base64: fileData.base64,
@@ -451,12 +622,41 @@ function App() {
     } else {
       alert(`Đang gửi file ${fileData.name} lên API để cập nhật hệ thống...`);
       console.log('API Payload Replace:', payload);
-      // Giả lập kết quả trả về từ API
       setTimeout(() => {
         alert('API đã xử lý thành công! (Simulated)');
       }, 1500);
     }
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-text-muted">Loading portfolio data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center glass p-8 max-w-md">
+          <p className="text-red-400 mb-4">Error loading data: {error}</p>
+          <button
+            onClick={refetch}
+            className="bg-primary hover:bg-primary-hover px-6 py-2 rounded-lg font-bold"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <Router>
@@ -477,18 +677,61 @@ function App() {
                     <img src={profileImg} alt="Profile" className="w-40 h-40 rounded-full object-cover border-4 border-primary/20" />
                     {isAdmin && <button className="absolute bottom-2 right-2 p-2 bg-primary rounded-full text-white shadow-lg"><Edit size={16} /></button>}
                   </div>
-                  <h1 className="text-2xl font-bold mb-2">{data.name}</h1>
-                  <p className="text-primary font-medium mb-6 uppercase tracking-wider text-xs">{data.role}</p>
-                  <div className="space-y-4 text-left text-text-muted">
-                    <div className="flex items-center gap-3"><Mail size={18} className="text-primary" /><span className="text-sm">{data.email}</span></div>
-                    <div className="flex items-center gap-3"><Phone size={18} className="text-primary" /><span className="text-sm">{data.phone}</span></div>
-                    <div className="flex items-center gap-3"><Globe size={18} className="text-primary" /><span className="text-sm">Skype: {data.skype}</span></div>
-                    <div className="flex items-center gap-3"><MapPin size={18} className="text-primary" /><span className="text-sm">{data.location}</span></div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex-1" />
+                    {isAdmin && editing.section !== 'profile' && (
+                      <button
+                        onClick={() => setEditing({ section: 'profile', id: data.profile?.id })}
+                        className="text-primary hover:text-white transition-colors"
+                      >
+                        <Edit size={18} />
+                      </button>
+                    )}
                   </div>
-                  <div className="mt-8 flex justify-center gap-4">
-                    <a href="#" className="p-2 glass hover:bg-white/10 transition-colors"><Github size={20} /></a>
-                    <a href={data.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 glass hover:bg-white/10 transition-colors text-primary"><Linkedin size={20} /></a>
-                  </div>
+
+                  {editing.section === 'profile' ? (
+                    <div className="text-left">
+                      <form className="space-y-4" onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSave('profile', {
+                          name: e.target.name.value,
+                          role: e.target.role.value,
+                          email: e.target.email.value,
+                          phone: e.target.phone.value,
+                          location: e.target.location.value,
+                          skype: e.target.skype.value,
+                          linkedin: e.target.linkedin.value,
+                        });
+                      }}>
+                        <input name="name" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" defaultValue={data.profile?.name} placeholder="Họ tên" />
+                        <input name="role" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-xs" defaultValue={data.profile?.role} placeholder="Vị trí" />
+                        <input name="email" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" defaultValue={data.profile?.email} placeholder="Email" />
+                        <input name="phone" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" defaultValue={data.profile?.phone} placeholder="Số điện thoại" />
+                        <input name="skype" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" defaultValue={data.profile?.skype} placeholder="Skype" />
+                        <input name="location" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" defaultValue={data.profile?.location} placeholder="Địa chỉ" />
+                        <input name="linkedin" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" defaultValue={data.profile?.linkedin} placeholder="LinkedIn URL" />
+                        <div className="flex gap-2 pt-2">
+                          <button type="submit" className="flex-1 bg-primary hover:bg-primary-hover py-2 rounded-lg font-bold text-sm">Lưu</button>
+                          <button type="button" onClick={() => setEditing({ section: null, id: null })} className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg font-bold text-sm">Hủy</button>
+                        </div>
+                      </form>
+                    </div>
+                  ) : (
+                    <>
+                      <h1 className="text-2xl font-bold mb-2">{data.profile?.name}</h1>
+                      <p className="text-primary font-medium mb-6 uppercase tracking-wider text-xs">{data.profile?.role}</p>
+                      <div className="space-y-4 text-left text-text-muted">
+                        <div className="flex items-center gap-3"><Mail size={18} className="text-primary" /><span className="text-sm">{data.profile?.email}</span></div>
+                        <div className="flex items-center gap-3"><Phone size={18} className="text-primary" /><span className="text-sm">{data.profile?.phone}</span></div>
+                        <div className="flex items-center gap-3"><Globe size={18} className="text-primary" /><span className="text-sm">Skype: {data.profile?.skype}</span></div>
+                        <div className="flex items-center gap-3"><MapPin size={18} className="text-primary" /><span className="text-sm">{data.profile?.location}</span></div>
+                      </div>
+                      <div className="mt-8 flex justify-center gap-4">
+                        <a href="#" className="p-2 glass hover:bg-white/10 transition-colors"><Github size={20} /></a>
+                        <a href={data.profile?.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 glass hover:bg-white/10 transition-colors text-primary"><Linkedin size={20} /></a>
+                      </div>
+                    </>
+                  )}
                 </motion.div>
 
                 {/* Tech Skills */}
@@ -535,16 +778,16 @@ function App() {
                     )}
                   </div>
                   <ul className="space-y-3 text-sm text-text-muted">
-                    {data.otherSkills.map((skill, i) => (
-                      <li key={i} className="group">
-                        {editing.section === 'otherSkills' && editing.id === i ? (
+                    {data.otherSkills.map((skill) => (
+                      <li key={skill.id} className="group">
+                        {editing.section === 'otherSkills' && editing.id === skill.id ? (
                           <div className="p-4 bg-white/5 rounded-xl border border-primary/20">
-                            <OtherSkillForm defaultValue={skill} onSave={(fd) => handleSave('otherSkills', fd)} onCancel={() => setEditing({ section: null, id: null })} />
+                            <OtherSkillForm defaultValue={skill.name} onSave={(fd) => handleSave('otherSkills', fd)} onCancel={() => setEditing({ section: null, id: null })} />
                           </div>
                         ) : (
                           <div className="flex items-start justify-between">
-                            <div className="flex items-start gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />{skill}</div>
-                            {isAdmin && <button onClick={() => setEditing({ section: 'otherSkills', id: i })} className="opacity-0 group-hover:opacity-100 text-text-muted hover:text-primary transition-all"><Edit size={12} /></button>}
+                            <div className="flex items-start gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />{skill.name}</div>
+                            {isAdmin && <button onClick={() => setEditing({ section: 'otherSkills', id: skill.id })} className="opacity-0 group-hover:opacity-100 text-text-muted hover:text-primary transition-all"><Edit size={12} /></button>}
                           </div>
                         )}
                       </li>
@@ -561,9 +804,9 @@ function App() {
                     {isAdmin && editing.section !== 'bio' && <button onClick={() => setEditing({ section: 'bio', id: 'main' })} className="text-primary hover:underline flex items-center gap-1"><Edit size={16} /> Sửa</button>}
                   </div>
                   {editing.section === 'bio' ? (
-                    <BioForm defaultValue={data.bio} onSave={(fd) => handleSave('bio', fd)} onCancel={() => setEditing({ section: null, id: null })} />
+                    <BioForm defaultValue={data.profile?.bio} onSave={(fd) => handleSave('bio', fd)} onCancel={() => setEditing({ section: null, id: null })} />
                   ) : (
-                    <p className="text-text-muted leading-relaxed text-lg">{data.bio}</p>
+                    <p className="text-text-muted leading-relaxed text-lg">{data.profile?.bio}</p>
                   )}
                 </motion.div>
 
