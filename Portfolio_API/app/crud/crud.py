@@ -150,8 +150,8 @@ def delete_other_skill(db: Session, skill_id: UUID) -> bool:
 # Experience CRUD
 # =====================================================
 def get_experiences(db: Session) -> List[Experience]:
-    """Get all active experiences"""
-    return db.query(Experience).filter(Experience.state_code == 0).all()
+    """Get all active experiences ordered by creation date descending"""
+    return db.query(Experience).filter(Experience.state_code == 0).order_by(Experience.created_on.desc()).all()
 
 def get_experience(db: Session, experience_id: UUID) -> Optional[Experience]:
     """Get a specific experience by ID"""

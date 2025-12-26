@@ -129,15 +129,15 @@ const BioForm = ({ defaultValue, onSave, onCancel }) => (
       <label className="text-sm font-medium text-text-muted">Nội dung giới thiệu</label>
       <textarea
         name="bio"
-        className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:border-primary/50 outline-none transition-all min-h-[200px]"
+        className="w-full bg-white/5 border border-white/10 text-white focus:border-primary/50 outline-none transition-all min-h-[200px]"
         defaultValue={defaultValue}
       />
     </div>
     <div className="flex gap-4">
-      <button type="submit" className="flex-1 bg-primary hover:bg-primary-hover py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20">
+      <button type="submit" className="flex-1 btn-primary">
         <Save size={18} /> Lưu thay đổi
       </button>
-      <button type="button" onClick={onCancel} className="px-8 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold transition-all">Hủy</button>
+      <button type="button" onClick={onCancel} className="btn-secondary px-8">Hủy</button>
     </div>
   </form>
 );
@@ -159,34 +159,34 @@ const ExperienceForm = ({ item, onSave, onCancel }) => (
     <div className="grid grid-cols-2 gap-4">
       <div className="space-y-2">
         <label className="text-sm font-medium text-text-muted">Công ty</label>
-        <input name="company" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white" defaultValue={item?.company} />
+        <input name="company" className="w-full bg-white/5 border border-white/10 outline-none focus:border-primary/50 text-white" defaultValue={item?.company} />
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium text-text-muted">Thời gian</label>
-        <input name="period" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white" defaultValue={item?.period} />
+        <input name="period" className="w-full bg-white/5 border border-white/10 outline-none focus:border-primary/50 text-white" defaultValue={item?.period} />
       </div>
     </div>
     <div className="space-y-2">
       <label className="text-sm font-medium text-text-muted">Vị trí</label>
-      <input name="role" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white" defaultValue={item?.role} />
+      <input name="role" className="w-full bg-white/5 border border-white/10 outline-none focus:border-primary/50 text-white" defaultValue={item?.role} />
     </div>
     <div className="space-y-2">
       <label className="text-sm font-medium text-text-muted">Công nghệ</label>
-      <input name="techStack" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white" defaultValue={item?.techStack} />
+      <input name="techStack" className="w-full bg-white/5 border border-white/10 outline-none focus:border-primary/50 text-white" defaultValue={item?.techStack} />
     </div>
     <div className="space-y-2">
       <label className="text-sm font-medium text-text-muted">Dự án / Lĩnh vực (mỗi dòng một ý)</label>
-      <textarea name="domains" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white min-h-[60px]" defaultValue={item?.domain?.join('\n')} />
+      <textarea name="domains" className="w-full bg-white/5 border border-white/10 outline-none focus:border-primary/50 text-white min-h-[60px]" defaultValue={item?.domain?.join('\n')} />
     </div>
     <div className="space-y-2">
       <label className="text-sm font-medium text-text-muted">Nhiệm vụ (mỗi dòng một ý)</label>
-      <textarea name="duties" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white min-h-[100px]" defaultValue={item?.duties?.join('\n')} />
+      <textarea name="duties" className="w-full bg-white/5 border border-white/10 outline-none focus:border-primary/50 text-white min-h-[100px]" defaultValue={item?.duties?.join('\n')} />
     </div>
     <div className="flex gap-4 pt-2">
-      <button type="submit" className="flex-1 bg-primary hover:bg-primary-hover py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20">
+      <button type="submit" className="flex-1 btn-primary">
         <Save size={18} /> Lưu
       </button>
-      <button type="button" onClick={onCancel} className="px-8 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold transition-all">Hủy</button>
+      <button type="button" onClick={onCancel} className="btn-secondary px-8">Hủy</button>
     </div>
   </form>
 );
@@ -202,23 +202,23 @@ const EducationForm = ({ item, onSave, onCancel }) => (
   }}>
     <div className="space-y-2">
       <label className="text-sm font-medium text-text-muted">Trường học</label>
-      <input name="school" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white" defaultValue={item?.school} />
+      <input name="school" className="w-full bg-white/5 border border-white/10 outline-none focus:border-primary/50 text-white" defaultValue={item?.school} />
     </div>
     <div className="grid grid-cols-2 gap-4">
       <div className="space-y-2">
         <label className="text-sm font-medium text-text-muted">Bằng cấp</label>
-        <input name="degree" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white" defaultValue={item?.degree} />
+        <input name="degree" className="w-full bg-white/5 border border-white/10 outline-none focus:border-primary/50 text-white" defaultValue={item?.degree} />
       </div>
       <div className="space-y-2">
         <label className="text-sm font-medium text-text-muted">Chuyên ngành</label>
-        <input name="major" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white" defaultValue={item?.major} />
+        <input name="major" className="w-full bg-white/5 border border-white/10 outline-none focus:border-primary/50 text-white" defaultValue={item?.major} />
       </div>
     </div>
     <div className="flex gap-4 pt-2">
-      <button type="submit" className="flex-1 bg-primary hover:bg-primary-hover py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20">
+      <button type="submit" className="flex-1 btn-primary">
         <Save size={18} /> Lưu
       </button>
-      <button type="button" onClick={onCancel} className="px-8 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold transition-all">Hủy</button>
+      <button type="button" onClick={onCancel} className="btn-secondary px-8">Hủy</button>
     </div>
   </form>
 );
@@ -230,13 +230,13 @@ const OtherSkillForm = ({ defaultValue, onSave, onCancel }) => (
   }}>
     <div className="space-y-2">
       <label className="text-sm font-medium text-text-muted">Kỹ năng</label>
-      <input name="skill" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white" defaultValue={defaultValue} />
+      <input name="skill" className="w-full bg-white/5 border border-white/10 outline-none focus:border-primary/50 text-white" defaultValue={defaultValue} />
     </div>
     <div className="flex gap-4 pt-2">
-      <button type="submit" className="flex-1 bg-primary hover:bg-primary-hover py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20">
+      <button type="submit" className="flex-1 btn-primary">
         <Save size={18} /> Lưu
       </button>
-      <button type="button" onClick={onCancel} className="px-8 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold transition-all">Hủy</button>
+      <button type="button" onClick={onCancel} className="btn-secondary px-8">Hủy</button>
     </div>
   </form>
 );
@@ -252,17 +252,17 @@ const SkillsForm = ({ category, skills, onSave, onCancel }) => (
   }}>
     <div className="space-y-2">
       <label className="text-sm font-medium text-text-muted">Tên nhóm kỹ năng</label>
-      <input name="category" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white" defaultValue={category} />
+      <input name="category" className="w-full bg-white/5 border border-white/10 outline-none focus:border-primary/50 text-white" defaultValue={category} />
     </div>
     <div className="space-y-2">
       <label className="text-sm font-medium text-text-muted">Kỹ năng (cách nhau bởi dấu phẩy)</label>
-      <textarea name="skills" className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none focus:border-primary/50 text-white min-h-[80px]" defaultValue={skills?.join(', ')} />
+      <textarea name="skills" className="w-full bg-white/5 border border-white/10 outline-none focus:border-primary/50 text-white min-h-[80px]" defaultValue={skills?.join(', ')} />
     </div>
     <div className="flex gap-4 pt-2">
-      <button type="submit" className="flex-1 bg-primary hover:bg-primary-hover py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20">
+      <button type="submit" className="flex-1 btn-primary">
         <Save size={18} /> Lưu
       </button>
-      <button type="button" onClick={onCancel} className="px-8 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold transition-all">Hủy</button>
+      <button type="button" onClick={onCancel} className="btn-secondary px-8">Hủy</button>
     </div>
   </form>
 );
@@ -375,7 +375,7 @@ const Navbar = ({ isAdmin, onToggleAdmin, onPDFAction }) => {
           <Link to="/" className="hover:text-primary">Trang chủ</Link>
           <button
             onClick={onToggleAdmin}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${isAdmin ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'bg-primary/20 text-primary border border-primary/50'}`}
+            className={`flex items-center gap-2 px-6 py-2 rounded-full transition-all font-bold ${isAdmin ? 'btn-danger' : 'bg-primary/20 text-primary border border-primary/50 hover:bg-primary/30'}`}
           >
             {isAdmin ? <LogOut size={18} /> : <LogIn size={18} />}
             {isAdmin ? 'Thoát Admin' : 'Admin'}
@@ -682,9 +682,9 @@ function App() {
                     {isAdmin && editing.section !== 'profile' && (
                       <button
                         onClick={() => setEditing({ section: 'profile', id: data.profile?.id })}
-                        className="text-primary hover:text-white transition-colors"
+                        className="btn-icon"
                       >
-                        <Edit size={18} />
+                        <Edit size={16} />
                       </button>
                     )}
                   </div>
@@ -703,16 +703,16 @@ function App() {
                           linkedin: e.target.linkedin.value,
                         });
                       }}>
-                        <input name="name" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" defaultValue={data.profile?.name} placeholder="Họ tên" />
-                        <input name="role" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-xs" defaultValue={data.profile?.role} placeholder="Vị trí" />
-                        <input name="email" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" defaultValue={data.profile?.email} placeholder="Email" />
-                        <input name="phone" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" defaultValue={data.profile?.phone} placeholder="Số điện thoại" />
-                        <input name="skype" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" defaultValue={data.profile?.skype} placeholder="Skype" />
-                        <input name="location" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" defaultValue={data.profile?.location} placeholder="Địa chỉ" />
-                        <input name="linkedin" className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm" defaultValue={data.profile?.linkedin} placeholder="LinkedIn URL" />
+                        <input name="name" className="w-full bg-white/5 border border-white/10 text-white" defaultValue={data.profile?.name} placeholder="Họ tên" />
+                        <input name="role" className="w-full bg-white/5 border border-white/10 text-white" defaultValue={data.profile?.role} placeholder="Vị trí" />
+                        <input name="email" className="w-full bg-white/5 border border-white/10 text-white" defaultValue={data.profile?.email} placeholder="Email" />
+                        <input name="phone" className="w-full bg-white/5 border border-white/10 text-white" defaultValue={data.profile?.phone} placeholder="Số điện thoại" />
+                        <input name="skype" className="w-full bg-white/5 border border-white/10 text-white" defaultValue={data.profile?.skype} placeholder="Skype" />
+                        <input name="location" className="w-full bg-white/5 border border-white/10 text-white" defaultValue={data.profile?.location} placeholder="Địa chỉ" />
+                        <input name="linkedin" className="w-full bg-white/5 border border-white/10 text-white" defaultValue={data.profile?.linkedin} placeholder="LinkedIn URL" />
                         <div className="flex gap-2 pt-2">
-                          <button type="submit" className="flex-1 bg-primary hover:bg-primary-hover py-2 rounded-lg font-bold text-sm">Lưu</button>
-                          <button type="button" onClick={() => setEditing({ section: null, id: null })} className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg font-bold text-sm">Hủy</button>
+                          <button type="submit" className="flex-1 btn-primary py-2 text-sm">Lưu</button>
+                          <button type="button" onClick={() => setEditing({ section: null, id: null })} className="px-4 btn-secondary py-2 text-sm">Hủy</button>
                         </div>
                       </form>
                     </div>
@@ -738,7 +738,7 @@ function App() {
                 <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="glass p-8">
                   <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-2">
                     <h3 className="text-xl font-bold flex items-center gap-2"><Briefcase size={20} className="text-accent" /> Kỹ năng chuyên môn</h3>
-                    {isAdmin && <button onClick={() => setEditing({ section: 'skills-add', id: 'new' })} className="text-primary hover:text-white transition-colors"><Plus size={18} /></button>}
+                    {isAdmin && <button onClick={() => setEditing({ section: 'skills-add', id: 'new' })} className="btn-icon"><Plus size={18} /></button>}
                   </div>
                   <div className="space-y-6">
                     {editing.section === 'skills-add' && <SkillsForm onSave={(fd) => handleSave('skills', fd)} onCancel={() => setEditing({ section: null, id: null })} />}
@@ -750,7 +750,7 @@ function App() {
                           <>
                             <div className="flex justify-between items-center mb-2">
                               <p className="text-xs font-bold text-accent uppercase tracking-widest">{category}</p>
-                              {isAdmin && <button onClick={() => setEditing({ section: 'skills', id: category })} className="opacity-0 group-hover:opacity-100 text-text-muted hover:text-primary transition-all"><Edit size={12} /></button>}
+                              {isAdmin && <button onClick={() => setEditing({ section: 'skills', id: category })} className="opacity-0 group-hover:opacity-100 btn-icon w-6 h-6"><Edit size={10} /></button>}
                             </div>
                             <div className="flex flex-wrap gap-2">
                               {skills.map(skill => (
@@ -768,7 +768,7 @@ function App() {
                 <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="glass p-8">
                   <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-2">
                     <h3 className="text-xl font-bold flex items-center gap-2"><User size={20} className="text-primary" /> Kỹ năng khác</h3>
-                    {isAdmin && <button onClick={() => setEditing({ section: 'otherSkills-add', id: 'new' })} className="text-primary hover:text-white transition-colors"><Plus size={18} /></button>}
+                    {isAdmin && <button onClick={() => setEditing({ section: 'otherSkills-add', id: 'new' })} className="btn-icon"><Plus size={18} /></button>}
                   </div>
                   <div className="mb-4">
                     {editing.section === 'otherSkills-add' && (
@@ -787,7 +787,7 @@ function App() {
                         ) : (
                           <div className="flex items-start justify-between">
                             <div className="flex items-start gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />{skill.name}</div>
-                            {isAdmin && <button onClick={() => setEditing({ section: 'otherSkills', id: skill.id })} className="opacity-0 group-hover:opacity-100 text-text-muted hover:text-primary transition-all"><Edit size={12} /></button>}
+                            {isAdmin && <button onClick={() => setEditing({ section: 'otherSkills', id: skill.id })} className="opacity-0 group-hover:opacity-100 btn-icon w-6 h-6"><Edit size={10} /></button>}
                           </div>
                         )}
                       </li>
@@ -801,7 +801,7 @@ function App() {
                 <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} className="glass p-10">
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold">Giới thiệu</h2>
-                    {isAdmin && editing.section !== 'bio' && <button onClick={() => setEditing({ section: 'bio', id: 'main' })} className="text-primary hover:underline flex items-center gap-1"><Edit size={16} /> Sửa</button>}
+                    {isAdmin && editing.section !== 'bio' && <button onClick={() => setEditing({ section: 'bio', id: 'main' })} className="btn-ghost-primary"><Edit size={16} /> Chỉnh sửa</button>}
                   </div>
                   {editing.section === 'bio' ? (
                     <BioForm defaultValue={data.profile?.bio} onSave={(fd) => handleSave('bio', fd)} onCancel={() => setEditing({ section: null, id: null })} />
@@ -814,7 +814,7 @@ function App() {
                 <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass p-10">
                   <div className="flex justify-between items-center mb-8">
                     <h2 className="text-2xl font-bold">Kinh nghiệm làm việc</h2>
-                    {isAdmin && <button onClick={() => setEditing({ section: 'exp-add', id: 'new' })} className="text-primary hover:underline flex items-center gap-1"><Plus size={18} /> Thêm mới</button>}
+                    {isAdmin && <button onClick={() => setEditing({ section: 'exp-add', id: 'new' })} className="btn-ghost-primary"><Plus size={18} /> Thêm mới</button>}
                   </div>
                   <div className="flex flex-col">
                     {editing.section === 'exp-add' && <div className="mb-12 p-6 bg-white/5 rounded-2xl border border-primary/20"><ExperienceForm onSave={(fd) => handleSave('exp', fd)} onCancel={() => setEditing({ section: null, id: null })} /></div>}
@@ -828,7 +828,7 @@ function App() {
                               <div>
                                 <div className="flex items-center gap-3">
                                   <h4 className="text-xl font-bold text-white tracking-wide">{exp.role}</h4>
-                                  {isAdmin && <button onClick={() => setEditing({ section: 'exp', id: exp.id })} className="opacity-0 group-hover:opacity-100 text-primary hover:text-white transition-all"><Edit size={16} /></button>}
+                                  {isAdmin && <button onClick={() => setEditing({ section: 'exp', id: exp.id })} className="opacity-0 group-hover:opacity-100 btn-icon w-7 h-7"><Edit size={14} /></button>}
                                 </div>
                                 <p className="text-primary font-bold text-lg">{exp.company}</p>
                               </div>
@@ -861,7 +861,7 @@ function App() {
                 <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass p-10">
                   <div className="flex justify-between items-center mb-8">
                     <h2 className="text-2xl font-bold">Học vấn</h2>
-                    {isAdmin && <button onClick={() => setEditing({ section: 'edu-add', id: 'new' })} className="text-primary hover:underline flex items-center gap-1 font-medium"><Plus size={16} /> Thêm mới</button>}
+                    {isAdmin && <button onClick={() => setEditing({ section: 'edu-add', id: 'new' })} className="btn-ghost-primary"><Plus size={16} /> Thêm mới</button>}
                   </div>
                   <div className="space-y-6">
                     {editing.section === 'edu-add' && <div className="p-6 bg-white/5 rounded-xl border border-primary/20"><EducationForm onSave={(fd) => handleSave('edu', fd)} onCancel={() => setEditing({ section: null, id: null })} /></div>}
@@ -870,11 +870,11 @@ function App() {
                         {editing.section === 'edu' && editing.id === edu.id ? (
                           <div className="p-6 bg-white/5 rounded-xl border border-primary/20"><EducationForm item={edu} onSave={(fd) => handleSave('edu', fd)} onCancel={() => setEditing({ section: null, id: null })} /></div>
                         ) : (
-                          <div className="flex flex-col md:flex-row md:justify-between md:items-center p-6 bg-white/5 rounded-lg border border-white/10 hover:border-primary/30 transition-all gap-4">
+                          <div className="flex flex-col md:flex-row md:justify-between md:items-center p-2 hover:bg-white/5 transition-all gap-4">
                             <div>
                               <div className="flex items-center gap-3 mb-1">
                                 <h4 className="text-lg font-bold text-white">{edu.degree} in {edu.major}</h4>
-                                {isAdmin && <button onClick={() => setEditing({ section: 'edu', id: edu.id })} className="opacity-0 group-hover:opacity-100 text-primary hover:text-white transition-all"><Edit size={16} /></button>}
+                                {isAdmin && <button onClick={() => setEditing({ section: 'edu', id: edu.id })} className="opacity-0 group-hover:opacity-100 btn-icon w-7 h-7"><Edit size={14} /></button>}
                               </div>
                               <p className="text-primary font-medium">{edu.school}</p>
                             </div>
