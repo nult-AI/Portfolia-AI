@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
-import { User, Edit, LogIn, LogOut, Upload, Mail, MapPin, Briefcase, GraduationCap, Github, Linkedin, ExternalLink, Phone, Globe, Plus, X, Save, FileText, Eye, RefreshCw } from 'lucide-react';
+import { User, Edit, LogIn, LogOut, Upload, Mail, MapPin, Briefcase, GraduationCap, Github, Linkedin, ExternalLink, Phone, Globe, Plus, X, Save, FileText, Eye, RefreshCw, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import profileImg from './assets/profile.png';
 import { usePortfolio } from './context/PortfolioContext';
 import { useMutation } from './hooks/useApi';
+import { useGoogleLogin } from '@react-oauth/google';
 import {
   profileService,
   experienceService,
@@ -13,8 +14,25 @@ import {
   skillCategoryService,
   skillService,
   cvService,
+  authService,
 } from './services/portfolioService';
 import { transformToApiFormat, transformFromApiFormat } from './utils/dataTransform';
+
+// Utility to convert Google Drive links to direct image URLs
+// Updated for 2024/2025 compatibility: Google has restricted the /uc endpoint
+const transformDriveUrl = (url) => {
+  if (!url) return url;
+  if (url.includes('drive.google.com') || url.includes('drive.usercontent.google.com')) {
+    // Match ID from various Drive URL formats
+    const match = url.match(/[?&]id=([^&]+)/) || url.match(/\/file\/d\/([^/]+)/) || url.match(/\/d\/([^/]+)/);
+    if (match && match[1]) {
+      // The 'thumbnail' endpoint is currently the most reliable way to embed Drive images after Jan 2024 policy changes
+      // sz=w1000 ensures a high enough resolution for an avatar
+      return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+    }
+  }
+  return url;
+};
 
 
 
@@ -136,12 +154,53 @@ const BioForm = ({ defaultValue, onSave, onCancel }) => (
     </div>
     <div className="flex gap-4">
       <button type="submit" className="flex-1 btn-primary">
-        <Save size={18} /> Lưu thay đổi
+        <Save size={18} /> Lưu bài viết
       </button>
       <button type="button" onClick={onCancel} className="btn-secondary px-8">Hủy</button>
     </div>
   </form>
 );
+
+const AvatarForm = ({ defaultValue, onSave, onCancel }) => {
+  const [previewUrl, setPreviewUrl] = React.useState(defaultValue || '');
+
+  return (
+    <form className="space-y-6" onSubmit={(e) => {
+      e.preventDefault();
+      onSave({ profileImage: e.target.avatar.value });
+    }}>
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-text-muted">Link ảnh đại diện (Hỗ trợ Google Drive)</label>
+        <input
+          name="avatar"
+          type="text"
+          className="w-full bg-white/5 border border-white/10 text-white focus:border-primary/50 outline-none transition-all"
+          defaultValue={defaultValue}
+          onChange={(e) => setPreviewUrl(e.target.value)}
+          placeholder="https://drive.google.com/file/d/..."
+        />
+        <p className="text-[10px] text-text-muted">Dán link Drive hoặc link ảnh trực tiếp. Hệ thống sẽ tự động chuyển đổi.</p>
+      </div>
+      {/* Simple preview */}
+      <div className="flex justify-center py-4">
+        <div className="w-32 h-32 rounded-full border-2 border-white/10 overflow-hidden bg-white/5">
+          <img
+            src={transformDriveUrl(previewUrl) || profileImg}
+            alt="Preview"
+            className="w-full h-full object-cover"
+            onError={(e) => { e.target.src = profileImg; }}
+          />
+        </div>
+      </div>
+      <div className="flex gap-4">
+        <button type="submit" className="flex-1 btn-primary">
+          <Save size={18} /> Lưu ảnh
+        </button>
+        <button type="button" onClick={onCancel} className="btn-secondary px-8">Hủy</button>
+      </div>
+    </form>
+  );
+};
 
 const ExperienceForm = ({ item, onSave, onCancel }) => (
   <form className="space-y-4" onSubmit={(e) => {
@@ -358,7 +417,7 @@ const PDFUploadModal = ({ isOpen, onClose, onAction, isProcessing }) => {
 
 // --- End Form Components ---
 
-const Navbar = ({ isAdmin, onToggleAdmin, onPDFAction, isProcessing }) => {
+const Navbar = ({ isAdmin, onPDFAction, isProcessing, user, onLogin, onLogout }) => {
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 
   return (
@@ -377,13 +436,28 @@ const Navbar = ({ isAdmin, onToggleAdmin, onPDFAction, isProcessing }) => {
         </div>
         <div className="flex gap-6 items-center">
           <Link to="/" className="hover:text-primary">Trang chủ</Link>
-          <button
-            onClick={onToggleAdmin}
-            className={`flex items-center gap-2 px-6 py-2 rounded-full transition-all font-bold ${isAdmin ? 'btn-danger' : 'bg-primary/20 text-primary border border-primary/50 hover:bg-primary/30'}`}
-          >
-            {isAdmin ? <LogOut size={18} /> : <LogIn size={18} />}
-            {isAdmin ? 'Thoát Admin' : 'Admin'}
-          </button>
+
+          {user ? (
+            <div className="flex items-center gap-4 pl-4 border-l border-white/10">
+              <div className="flex items-center gap-3">
+                <img src={user.picture_url} alt={user.full_name} className="w-8 h-8 rounded-full border border-primary/30" />
+                <span className="text-sm font-medium hidden md:block">{user.full_name}</span>
+              </div>
+              <button
+                onClick={onLogout}
+                className="flex items-center gap-2 px-6 py-2 rounded-full font-bold btn-danger"
+              >
+                <LogOut size={16} /> Thoát
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onLogin}
+              className="flex items-center gap-2 px-6 py-2 rounded-full transition-all font-bold bg-primary/20 text-primary border border-primary/50 hover:bg-primary/30"
+            >
+              <LogIn size={18} /> Đăng nhập Admin
+            </button>
+          )}
         </div>
       </nav>
 
@@ -412,6 +486,7 @@ const Footer = () => (
 
 
 function App() {
+  const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const { data: apiData, loading, error, refetch } = usePortfolio();
   const { mutate } = useMutation();
@@ -419,6 +494,45 @@ function App() {
   const [localData, setLocalData] = useState(null);
   const [isProcessingCV, setIsProcessingCV] = useState(false);
   const [extractedCVData, setExtractedCVData] = useState(null);
+
+  React.useEffect(() => {
+    const savedUserStr = localStorage.getItem('auth_user');
+    if (savedUserStr) {
+      const savedUser = JSON.parse(savedUserStr);
+      setUser(savedUser);
+      setIsAdmin(true);
+
+      // Ensure preferred_user_id is set for this browser
+      if (!localStorage.getItem('preferred_user_id')) {
+        localStorage.setItem('preferred_user_id', savedUser.id);
+      }
+    }
+  }, []);
+
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const result = await mutate(authService.googleLogin, tokenResponse.access_token);
+        localStorage.setItem('auth_token', result.access_token);
+        localStorage.setItem('auth_user', JSON.stringify(result.user));
+        localStorage.setItem('preferred_user_id', result.user.id);
+        setUser(result.user);
+        setIsAdmin(true);
+        refetch(); // Reload data for the logged in user
+      } catch (err) {
+        alert('Đăng nhập thất bại: ' + (err.detail || err.message));
+      }
+    },
+    onError: () => alert('Đăng nhập Google thất bại'),
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+    setUser(null);
+    setIsAdmin(false);
+    refetch(); // Reload global data or empty
+  };
 
   // Use local data if available (for optimistic updates), otherwise API data or fallback
   const data = localData || apiData || INITIAL_DATA;
@@ -442,6 +556,18 @@ function App() {
           setLocalData(prev => ({
             ...prev,
             profile: { ...prev.profile, ...formData }
+          }));
+        }
+      } else if (section === 'avatar') {
+        if (data.profile?.id) {
+          const rawUrl = formData.profileImage?.trim() || null;
+          const profile_image_url = transformDriveUrl(rawUrl);
+
+          await mutate(profileService.updateProfile, data.profile.id, { profile_image_url });
+
+          setLocalData(prev => ({
+            ...prev,
+            profile: { ...prev.profile, profileImage: profile_image_url }
           }));
         }
       } else if (section === 'bio') {
@@ -677,9 +803,11 @@ function App() {
       <div className="min-h-screen">
         <Navbar
           isAdmin={isAdmin}
-          onToggleAdmin={() => setIsAdmin(!isAdmin)}
           onPDFAction={handlePDFAction}
           isProcessing={isProcessingCV}
+          user={user}
+          onLogin={login}
+          onLogout={handleLogout}
         />
 
         <Routes>
@@ -688,9 +816,21 @@ function App() {
               {/* Sidebar Section */}
               <div className="lg:col-span-1 space-y-6">
                 <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} className="glass p-8 text-center">
-                  <div className="relative inline-block mb-6">
-                    <img src={profileImg} alt="Profile" className="w-40 h-40 rounded-full object-cover border-4 border-primary/20" />
-                    {isAdmin && <button className="absolute bottom-2 right-2 p-2 bg-primary rounded-full text-white shadow-lg"><Edit size={16} /></button>}
+                  <div className="relative inline-block mb-6 group">
+                    <img
+                      src={data.profile?.profileImage || profileImg}
+                      alt="Profile"
+                      className="w-40 h-40 rounded-full object-cover border-4 border-primary/20"
+                      onError={(e) => { e.target.src = profileImg; }}
+                    />
+                    {isAdmin && (
+                      <button
+                        onClick={() => setEditing({ section: 'avatar', id: data.profile?.id })}
+                        className="absolute bottom-2 right-2 p-3 bg-primary rounded-full text-white shadow-xl hover:scale-110 transition-transform"
+                      >
+                        <Camera size={18} />
+                      </button>
+                    )}
                   </div>
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex-1" />
@@ -906,6 +1046,20 @@ function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
         <Footer />
+
+        {editing.section === 'avatar' && (
+          <Modal
+            isOpen={true}
+            onClose={() => setEditing({ section: null, id: null })}
+            title="Sửa ảnh đại diện"
+          >
+            <AvatarForm
+              defaultValue={data.profile?.profileImage}
+              onSave={(formData) => handleSave('avatar', formData)}
+              onCancel={() => setEditing({ section: null, id: null })}
+            />
+          </Modal>
+        )}
       </div>
     </Router>
   );

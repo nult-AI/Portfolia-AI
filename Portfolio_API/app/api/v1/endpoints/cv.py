@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.schemas import schemas
 from app.crud import crud
 from app.services.llm_service import llm_service
-from typing import Any, Optional
+from app.api import deps
+from app.models.models import User
 
 router = APIRouter()
 
@@ -12,7 +12,8 @@ router = APIRouter()
 async def process_cv(
     file: UploadFile = File(...),
     mode: str = Form("preview"), # mode can be 'preview' or 'replace'
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
 ):
     """
     Upload a CV PDF, analyze it using LLM.
@@ -30,7 +31,7 @@ async def process_cv(
         extracted_data = await llm_service.parse_cv(content)
         
         if mode == "replace":
-            crud.bulk_replace_cv_data(db, extracted_data.model_dump())
+            crud.bulk_replace_cv_data(db, extracted_data.model_dump(), current_user.id)
             return {
                 "message": "Portfolio updated successfully from CV",
                 "success": True,

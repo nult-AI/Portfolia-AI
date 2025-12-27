@@ -14,6 +14,12 @@ class ApiClient {
     // Default headers
     const headers = { ...options.headers };
     
+    // Add Authorization header if token exists
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     let body = options.body;
 
     // Handle data transformation based on type

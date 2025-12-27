@@ -4,7 +4,7 @@ Run this script once to recreate all tables with new schema
 """
 from app.core.database import engine, Base
 from app.models.models import (
-    Profile, SkillCategory, Skill, OtherSkill,
+    User, Profile, SkillCategory, Skill, OtherSkill,
     Experience, ExperienceDuty, ExperienceDomain, Education
 )
 

@@ -8,6 +8,23 @@ class BaseSchema(BaseModel):
         from_attributes = True
 
 # =====================================================
+# User Schemas
+# =====================================================
+class UserBase(BaseSchema):
+    email: str
+    full_name: Optional[str] = None
+    picture_url: Optional[str] = None
+
+class UserCreate(UserBase):
+    google_id: str
+
+class User(UserBase):
+    id: UUID
+    google_id: str
+    created_on: datetime
+    modified_on: datetime
+
+# =====================================================
 # Skill Schemas
 # =====================================================
 class SkillBase(BaseSchema):

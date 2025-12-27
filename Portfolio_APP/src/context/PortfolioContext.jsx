@@ -28,12 +28,15 @@ export const PortfolioProvider = ({ children }) => {
             setLoading(true);
             setError(null);
 
+            const preferredUserId = localStorage.getItem('preferred_user_id');
+            const params = preferredUserId ? { user_id: preferredUserId } : {};
+
             const [profile, categories, otherSkills, experiences, educations] = await Promise.all([
-                profileService.getProfile().catch(() => null),
-                skillCategoryService.getAll(),
-                otherSkillService.getAll(),
-                experienceService.getAll(),
-                educationService.getAll(),
+                profileService.getProfile(params).catch(() => null),
+                skillCategoryService.getAll(params),
+                otherSkillService.getAll(params),
+                experienceService.getAll(params),
+                educationService.getAll(params),
             ]);
 
             setData({
