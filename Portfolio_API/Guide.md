@@ -5,4 +5,8 @@
 # sau khi deploy lên huggingface thì api sẽ là:
 - https://<account>-<repo name>.hf.space/
 - https://nult2003-ai-portfolio-api.hf.space/
+- api connect với supabase cloud qua pooler session
+
+# run  docker file
+- docker run -d --name portfolio-api -p 7860:7860 portfolio-api
 
